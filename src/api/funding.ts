@@ -1,6 +1,27 @@
-import Web3Provider from './web3'
-import ABIFunding from '@/abi/fundingAbi'
+import { Web3Provider } from '@ethersproject/providers';
+import { Contract } from '@ethersproject/contracts';
+import { BigNumber } from "ethers";
 
-const FundingContract = new Web3Provider.eth.Contract(ABIFunding, '0x92E8d6291d7F8662821278D22424395bc43c4BE7')
+import FundingABI from "../abi/Funding.json"
 
-export default FundingContract
+
+export default class Funding {
+    static async createCampaign(
+        provider: Web3Provider,
+        owner: string,
+        target: BigNumber,
+        startDate: BigNumber,
+        finishDate: BigNumber
+    ): Promise<any> {
+        const funding = new Contract(
+            "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+            FundingABI,
+            provider.getSigner()
+        )
+        try {
+            return await funding.createCampaign(owner, target, startDate, finishDate)
+        } catch (e) {
+            return e
+        }
+    }
+}

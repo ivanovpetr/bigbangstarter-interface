@@ -1,26 +1,51 @@
 <template>
   <div id="nav">
     <router-link to="/">Home</router-link> |
-    <router-link to="/campaign">Campaign</router-link>
+    <router-link to="/campaign">Campaign</router-link> |
+    <router-link to="/campaign/create">Create Campaign</router-link>
   </div>
-  <router-view/>
+  <Header></Header>
+  <main class="flex-shrink-0">
+    <router-view/>
+  </main>
+  <Footer></Footer>
 </template>
 
 <script lang="ts">
-import {Vue} from "vue-class-component";
+import Footer from  '@/components/Footer.vue'
+import Header from  '@/components/Header.vue'
+import {defineComponent, onMounted} from "vue";
+import {useStore} from "vuex";
+import {RootState} from "@/store";
 
-export default class App extends Vue {
-  mounted(){
-    this.$store.dispatch('account/init')
-    this.$store.dispatch('campaigns/init')
-  }
-}
+export default defineComponent({
+  name: "App",
+  components: {
+    Footer,
+    Header,
+  },
+  setup() {
+    const store = useStore<RootState>()
+    onMounted(() => {
+      store.dispatch('account/init')
+      store.dispatch('campaigns/init')
+    })
+  },
+})
+
 </script>
 
 <style>
 @import'~bootstrap/dist/css/bootstrap.css';
 
 @media screen{
+  html,body,#app{
+    height: 100% !important;
+  }
+  #app {
+    display: flex;
+    flex-direction: column;
+  }
   .container{max-width:1160px;margin:0 auto;padding:0 30px;}
   .button{border-radius:100px;padding:12px 16px;border:1px solid;display:inline-block;font-size:14px;line-height:20px;font-weight:600;}
   .button.button--block{display:block;text-align:center;width:100%;}

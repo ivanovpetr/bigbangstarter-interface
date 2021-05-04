@@ -1,6 +1,5 @@
 <template>
   <div class="container py-5" id="custom-cards">
-    <Header></Header>
     <div class="container">
       <div class="row">
         <div class="col">
@@ -11,7 +10,6 @@
         </div>
       </div>
     </div>
-    <Footer></Footer>
   </div>
 </template>
 

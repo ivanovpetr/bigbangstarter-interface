@@ -1,6 +1,8 @@
 import { ActionContext } from 'vuex';
 import { RootState } from '@/store';
-import Web3 from '@/api/web3';
+import { Web3Provider, Provider } from '@ethersproject/providers';
+import {ethers} from "ethers";
+
 
 
 export interface AccountState {
@@ -35,48 +37,49 @@ const actions = {
         await dispatch('connect');
     },
     connect: async ({ commit, dispatch, state }: ActionContext<AccountState, RootState>): Promise<void> => {
-        const provider = (<any>window).ethereum
-        if (!provider){
+        const metamask = (<any>window).ethereum
+        if (!metamask){
             console.log("Please install Metamask")
             return
         }
-        const accounts = await provider.request({ method: 'eth_requestAccounts'})
+        const accounts = await metamask.request({ method: 'eth_requestAccounts'})
         if (accounts.length === 0) {
             await dispatch("disconnect")
             return;
         }
-        await dispatch('saveProvider', provider);
+        await dispatch('saveProvider', metamask);
 
     },
     disconnect: async({ commit }: ActionContext<AccountState, RootState>): Promise<void> => {
         console.log('vuex: account disconnect')
     },
-    saveProvider: async({ commit, dispatch }: ActionContext<AccountState, RootState>, provider: any): Promise<void> => {
-        if (provider.removeAllListeners) {
-            provider.removeAllListeners();
+    saveProvider: async({ commit, dispatch }: ActionContext<AccountState, RootState>, metamask: any): Promise<void> => {
+        if (metamask.removeAllListeners) {
+            metamask.removeAllListeners();
         }
-        if (provider && provider.on) {
-            provider.on('chainChanged', async () => {
+        if (metamask && metamask.on) {
+            metamask.on('chainChanged', async () => {
                 //commit('clear');
-                dispatch('saveProvider', provider);
+                await dispatch('saveProvider', metamask);
             });
-            provider.on('accountsChanged', async () => {
+            metamask.on('accountsChanged', async () => {
                 //commit('clear');
-                await dispatch('saveProvider', provider);
+                await dispatch('saveProvider', metamask);
             });
-            provider.on('disconnect', async () => {
-                dispatch('disconnect');
+            metamask.on('disconnect', async () => {
+                await dispatch('disconnect');
             });
         }
-        const account = provider.selectedAddress
+        const account = metamask.selectedAddress
+        const web3Provider = new Web3Provider(metamask)
         let balance
         if (account) {
-            balance =  await Web3.eth.getBalance(account)
+            balance =  await web3Provider.getBalance(account)
         } else {
             balance = '0'
         }
         commit('setAddress', account)
-        commit('setBalance', Web3.utils.fromWei(balance, "ether"))
+        commit('setBalance', ethers.utils.formatEther(balance))
         //commit('setChainId', network.chainId);
         //dispatch('fetchState');
     },

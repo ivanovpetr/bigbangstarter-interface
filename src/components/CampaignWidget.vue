@@ -46,8 +46,7 @@
 import {defineComponent, computed, PropType} from 'vue'
 import {CampaignData} from "@/store/modules/campaigns"
 import moment from "moment"
-import Web3 from "web3"
-import BN from "bn.js"
+import {ethers, BigNumber} from "ethers";
 
 export default defineComponent({
   name: "CampaignWidget",
@@ -59,13 +58,13 @@ export default defineComponent({
   },
   setup(props) {
     const targetEthers = computed(() => {
-      return Web3.utils.fromWei(props.campaign.target, "ether")
+      return ethers.utils.formatEther(props.campaign.target)
     })
     const fundedEthers = computed(() => {
-      return Web3.utils.fromWei(props.campaign.funded, "ether")
+      return ethers.utils.formatEther(props.campaign.funded)
     })
     const fundedPercentage = computed(() => {
-      return props.campaign.funded.div(props.campaign.target.div(new BN(100))).toNumber()
+      return props.campaign.funded.div(props.campaign.target.div(100)).toNumber()
     })
     const timeLeft = computed(() => {
       const campaignDatesDiff = props.campaign.startedAt.diff(props.campaign.finishedAt)

@@ -32,7 +32,7 @@ export default class Account extends Vue {
     this.$store.dispatch('account/connect')
   }
   shrinkAddress(address: string): string {
-    return address.substr(0, 5) + "..." + address.substr(address.length-5, 4)
+    return address.substr(0, 5) + "..." + address.substr(address.length-5, 5)
   }
   get accountAddress() {
     return this.$store.state.account.address;
