@@ -1,7 +1,8 @@
 import { ActionContext } from 'vuex';
 import { RootState } from '@/store';
 import {ethers, BigNumber} from "ethers";
-//import FundingContract from '@/api/funding';
+import provider from "@/utils/provider";
+import Funding from "@/api/funding";
 import moment from 'moment'
 
 export interface CampaignsState {
@@ -15,6 +16,7 @@ export interface CampaignData {
     funded: BigNumber
     startedAt: moment.Moment
     finishedAt: moment.Moment
+    collectedByOwner: boolean
 }
 
 const mutations = {
@@ -41,27 +43,29 @@ const actions = {
         await dispatch('fetchCampaigns')
     },
     fetchCampaigns: async({commit}: ActionContext<CampaignsState, RootState>): Promise<void> => {
-        // const campaigns = await FundingContract.methods.getCampaigns().call()
-        // const convertedCampaigns: Array<CampaignData> = campaigns.map((campaign: any):CampaignData => {
-        //     return {
-        //         id: campaign[0],
-        //         owner: campaign[1],
-        //         target: new BN(campaign[2]),
-        //         funded: new BN(campaign[3].reduce((sum: BN, tx: any) => sum.add(tx[1]), 0)),
-        //         startedAt: moment.unix(campaign[4]),
-        //         finishedAt: moment.unix(campaign[5]),
-        //     }
-        // }).sort((a: CampaignData, b: CampaignData) => {
-        //     if (a.finishedAt.unix() < b.finishedAt.unix()) {
-        //         return -1;
-        //     }
-        //     if (a.finishedAt.unix() < b.finishedAt.unix()) {
-        //         return 1;
-        //     }
-        //     return 0;
-        // })
-        //
-        // commit('setCampaigns', convertedCampaigns)
+        const campaigns = await Funding.getCampaigns()
+        console.log(campaigns)
+        const convertedCampaigns: Array<CampaignData> = campaigns.map((campaign: any):CampaignData => {
+            return {
+                id: campaign.id.toNumber(),
+                owner: campaign.owner,
+                target: campaign.target,
+                funded: campaign.funded,
+                startedAt: moment.unix(campaign.startedAt),
+                finishedAt: moment.unix(campaign.finishedAt),
+                collectedByOwner: campaign.collectedByOwner
+            }
+        }).sort((a: CampaignData, b: CampaignData) => {
+            if (a.finishedAt.unix() < b.finishedAt.unix()) {
+                return -1;
+            }
+            if (a.finishedAt.unix() < b.finishedAt.unix()) {
+                return 1;
+            }
+            return 0;
+        })
+
+        commit('setCampaigns', convertedCampaigns)
 
     }
 }
