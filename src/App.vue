@@ -1,9 +1,4 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/campaign">Campaign</router-link> |
-    <router-link to="/campaign/create">Create Campaign</router-link>
-  </div>
   <Header></Header>
   <main class="flex-shrink-0">
     <router-view/>
@@ -45,6 +40,9 @@ export default defineComponent({
   #app {
     display: flex;
     flex-direction: column;
+  }
+  a {
+    text-decoration: none;
   }
   .container{max-width:1160px;margin:0 auto;padding:0 30px;}
   .button{border-radius:100px;padding:12px 16px;border:1px solid;display:inline-block;font-size:14px;line-height:20px;font-weight:600;}
