@@ -93,7 +93,7 @@ const actions = {
         try {
             balance = await Funding.getCampaignFundingsSumByUser(BigNumber.from(campaignId) ,state.address)
         } catch (e){
-            console.error('failed to fetch funding balance', )
+            console.error('failed to fetch funding balance', e)
             return
         }
         commit('setCampaignBalance', {campaignId: campaignId, balance: balance})
