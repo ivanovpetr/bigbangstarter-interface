@@ -12,14 +12,14 @@
           <span class="text-success fs-3 display-6 lh-1 fw-bold">Raised {{fundedEthers}} ETH</span>
         </div>
         <div class="row mb-3"><div class="col"><span>Target is {{targetEthers}} ETH</span></div></div>
-<!--        <div class="row">-->
-<!--          <div class="col">-->
-<!--            <span class="fw-bold">Participants</span>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--        <div class="row">-->
-<!--          <div class="col"><span class="fs-1">58</span></div>-->
-<!--        </div>-->
+        <div class="row">
+          <div class="col">
+            <span class="fw-bold">Participants</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col"><span class="fs-1">{{numberOfParticipants}}</span></div>
+        </div>
         <div class="row">
           <div class="col">
             <span class="fw-bold">Ends in</span>
@@ -131,7 +131,8 @@ export default defineComponent ({
     })
 
     onMounted(() => {
-      store.dispatch('account/fetchFundingBalance',props.campaign.id)
+      store.dispatch('account/fetchFundingBalance', props.campaign.id)
+      store.dispatch('campaigns/fetchFundingTransactionsByCampaignId', props.campaign.id)
     })
 
     const fundingBalance = computed(() => {
@@ -152,6 +153,10 @@ export default defineComponent ({
       } else {
         return fundingBalance.value
       }
+    })
+
+    const numberOfParticipants = computed(() => {
+      return store.getters['campaigns/numberOfUniqueParticipants'](props.campaign.id)
     })
 
     const showWithdrawButton = computed(() => {
@@ -175,7 +180,8 @@ export default defineComponent ({
       fundingBalance,
       accountAddress,
       showWithdrawButton,
-      toWithdraw
+      toWithdraw,
+      numberOfParticipants
     }
   }
 })

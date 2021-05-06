@@ -39,6 +39,7 @@ export default class Funding {
         }
     }
     static async getCampaignFundingsSumByUser(campaignId: BigNumber, account: string): Promise<any> {
+        console.log("getCampaignFundingsSumByUser called with", campaignId, account)
         const funding = new Contract(
             config.addresses.funding,
             FundingABI,
@@ -46,6 +47,19 @@ export default class Funding {
         )
         try {
             return await funding.getBalance(campaignId, account)
+        } catch (e) {
+            throw e
+        }
+    }
+    static async getFundingTransactionsByCampaignId(campaignId: BigNumber): Promise<any> {
+        const funding = new Contract(
+            config.addresses.funding,
+            FundingABI,
+            provider.getSigner()
+        )
+        try {
+            const filter = funding.filters.CampaignFunded(campaignId)
+            return await funding.queryFilter(filter)
         } catch (e) {
             return e
         }

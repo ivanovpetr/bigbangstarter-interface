@@ -89,7 +89,13 @@ const actions = {
         //dispatch('fetchState');
     },
     fetchFundingBalance: async({ commit, state }: ActionContext<AccountState, RootState>, campaignId: number): Promise<void> => {
-        const balance = await Funding.getCampaignFundingsSumByUser(BigNumber.from(campaignId) ,state.address)
+        let balance = BigNumber.from(0)
+        try {
+            balance = await Funding.getCampaignFundingsSumByUser(BigNumber.from(campaignId) ,state.address)
+        } catch (e){
+            console.error('failed to fetch funding balance', )
+            return
+        }
         commit('setCampaignBalance', {campaignId: campaignId, balance: balance})
     }
 }
