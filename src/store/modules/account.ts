@@ -1,17 +1,17 @@
 import { ActionContext } from 'vuex';
 import { RootState } from '@/store';
-import { Web3Provider, Provider } from '@ethersproject/providers';
-import {ethers} from "ethers";
-
-
+import { Web3Provider } from '@ethersproject/providers';
+import { BigNumber, ethers} from "ethers";
+import Funding from "@/api/funding";
 
 export interface AccountState {
     address: string;
     chainId: number;
     balance: string;
+    fundingBalances: Map<number, BigNumber>
 }
 
-const mutations ={
+const mutations = {
     setAddress: (_state: AccountState, address: string): void => {
         _state.address = address;
     },
@@ -24,12 +24,17 @@ const mutations ={
     clear: (_state: AccountState): void => {
         _state.balance = '';
     },
+    setCampaignBalance: (_state: AccountState, payload: { campaignId: number, balance: BigNumber }): void => {
+        _state.fundingBalances.set(payload.campaignId, payload.balance)
+    }
 }
 
 const getters = {
     address: (state: AccountState): string => {
         return state.address;
     },
+    fundingBalance: (state: AccountState) => (campaignId: number) => {
+        return state.fundingBalances.get(campaignId)}
 }
 
 const actions = {
@@ -83,6 +88,10 @@ const actions = {
         //commit('setChainId', network.chainId);
         //dispatch('fetchState');
     },
+    fetchFundingBalance: async({ commit, state }: ActionContext<AccountState, RootState>, campaignId: number): Promise<void> => {
+        const balance = await Funding.getCampaignFundingsSumByUser(BigNumber.from(campaignId) ,state.address)
+        commit('setCampaignBalance', {campaignId: campaignId, balance: balance})
+    }
 }
 
 function state(): AccountState {
@@ -90,6 +99,7 @@ function state(): AccountState {
         address: '',
         chainId: 0,
         balance: '',
+        fundingBalances: new Map<number, BigNumber>()
     }
 }
 

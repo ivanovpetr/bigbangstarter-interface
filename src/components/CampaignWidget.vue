@@ -10,7 +10,9 @@
             <span v-else class="col-4 badge bg-info text-dark">Not started</span>
           </div>
           <div class="row">
-            <h2 class="fs-2 text-dark mb-3 display-6 lh-1 fw-bold">Campaign {{campaign.id}}</h2>
+            <router-link :to="{name: 'Campaign', params: {id: campaign.id}}">
+              <h2 class="fs-2 text-dark mb-3 display-6 lh-1 fw-bold">Campaign {{campaign.id}}</h2>
+            </router-link>
           </div>
           <div v-if="!finished" class="row">
             <div class="col">

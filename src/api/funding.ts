@@ -38,4 +38,16 @@ export default class Funding {
             return e
         }
     }
+    static async getCampaignFundingsSumByUser(campaignId: BigNumber, account: string): Promise<any> {
+        const funding = new Contract(
+            config.addresses.funding,
+            FundingABI,
+            provider.getSigner()
+        )
+        try {
+            return await funding.getBalance(campaignId, account)
+        } catch (e) {
+            return e
+        }
+    }
 }

@@ -1,12 +1,12 @@
 <template>
   <div class="container py-5" id="custom-cards">
     <div class="container">
-      <div class="row">
+      <div v-if="campaign" class="row">
         <div class="col">
-          <CampaignDescription></CampaignDescription>
+          <CampaignDescription :campaignId="campaign.id"></CampaignDescription>
         </div>
         <div class="col-4">
-          <CampaignSummary></CampaignSummary>
+          <CampaignSummary :campaign="campaign"></CampaignSummary>
         </div>
       </div>
     </div>
@@ -14,17 +14,29 @@
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component';
-import Footer from  '@/components/Footer.vue'
+import { defineComponent, ref, computed} from "vue";
+import { useRouter } from 'vue-router';
 import CampaignSummary from '@/components/CampaignSummary.vue'
 import CampaignDescription from '@/components/CampaignDescription.vue'
+import {useStore} from "vuex";
+import {RootState} from "@/store";
+import {CampaignData} from "@/store/modules/campaigns";
 
-@Options({
+export default defineComponent({
+  name: "Campaign",
   components: {
-    Footer,
-    CampaignSummary,
     CampaignDescription,
+    CampaignSummary
   },
+  setup() {
+    const router = useRouter();
+    const store = useStore<RootState>()
+    const campaign = computed(() => {
+      return <CampaignData>store.getters["campaigns/campaignById"](+router.currentRoute.value.params.id)
+    })
+    return {
+      campaign
+    }
+  }
 })
-export default class Campaign extends Vue {}
 </script>

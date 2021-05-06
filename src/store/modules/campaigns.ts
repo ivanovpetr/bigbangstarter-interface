@@ -26,15 +26,13 @@ const mutations = {
 }
 
 const getters = {
-    campaignsInProgress: (state: CampaignsState): CampaignData[] => {
-         const nowUnix = moment().unix()
-         return state.campaigns.filter((campaign: CampaignData) => {
-             return campaign.startedAt.unix() > nowUnix && campaign.finishedAt.unix() < nowUnix
-        })
-        return state.campaigns
-    },
     campaigns: (state: CampaignsState): CampaignData[] => {
         return state.campaigns
+    },
+    campaignById: (state: CampaignsState) => (campaignId: number) => {
+        return state.campaigns.find((c: CampaignData) => {
+            return c.id === campaignId
+        })
     }
 }
 
@@ -44,8 +42,7 @@ const actions = {
     },
     fetchCampaigns: async({commit}: ActionContext<CampaignsState, RootState>): Promise<void> => {
         const campaigns = await Funding.getCampaigns()
-        console.log(campaigns)
-        const convertedCampaigns: Array<CampaignData> = campaigns.map((campaign: any):CampaignData => {
+        const convertedCampaigns: Array<CampaignData> = campaigns.map((campaign: any): CampaignData => {
             return {
                 id: campaign.id.toNumber(),
                 owner: campaign.owner,
