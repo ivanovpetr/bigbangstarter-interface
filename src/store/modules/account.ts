@@ -8,7 +8,8 @@ export interface AccountState {
     address: string;
     chainId: number;
     balance: string;
-    fundingBalances: Map<number, BigNumber>
+    fundingBalances: Map<number, BigNumber>;
+    metamask: any;
 }
 
 const mutations = {
@@ -23,6 +24,9 @@ const mutations = {
     },
     clear: (_state: AccountState): void => {
         _state.balance = '';
+    },
+    setMetamask: (_state: AccountState, metamask: any): void => {
+        _state.metamask = metamask;
     },
     setCampaignBalance: (_state: AccountState, payload: { campaignId: number, balance: BigNumber }): void => {
         _state.fundingBalances.set(payload.campaignId, payload.balance)
@@ -80,8 +84,17 @@ const actions = {
                 await dispatch('disconnect');
             });
         }
-        const account = metamask.selectedAddress
-        const web3Provider = new Web3Provider(metamask)
+        commit('setMetamask', metamask)
+
+        dispatch('fetchAccountState')
+        //commit('setChainId', network.chainId);
+    },
+    fetchAccountState: async({ commit, state }: ActionContext<AccountState, RootState>): Promise<void> => {
+        if (!state.metamask) {
+            return
+        }
+        const account = state.metamask.selectedAddress
+        const web3Provider = new Web3Provider(state.metamask)
         let balance
         if (account) {
             balance =  await web3Provider.getBalance(account)
@@ -90,8 +103,6 @@ const actions = {
         }
         commit('setAddress', account)
         commit('setBalance', ethers.utils.formatEther(balance))
-        //commit('setChainId', network.chainId);
-        //dispatch('fetchState');
     },
     fetchFundingBalance: async({ commit, state }: ActionContext<AccountState, RootState>, campaignId: number): Promise<void> => {
         let balance = BigNumber.from(0)
@@ -110,7 +121,8 @@ function state(): AccountState {
         address: '',
         chainId: 0,
         balance: '',
-        fundingBalances: new Map<number, BigNumber>()
+        fundingBalances: new Map<number, BigNumber>(),
+        metamask: null
     }
 }
 

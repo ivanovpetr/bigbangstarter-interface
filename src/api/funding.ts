@@ -78,4 +78,18 @@ export default class Funding {
            console.error("failed to withdraw", e)
         }
     }
+
+    static async fundCampaign(provider: Web3Provider, campaignId: BigNumber, amount: BigNumber): Promise<any> {
+        const funding = new Contract(
+            config.addresses.funding,
+            FundingABI,
+            provider.getSigner()
+        )
+        try {
+            return await funding.fund(campaignId, {value: amount});
+        } catch (e) {
+            console.error("failed to fund campaign", e)
+            return
+        }
+    }
 }

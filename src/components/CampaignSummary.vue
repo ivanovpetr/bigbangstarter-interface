@@ -55,7 +55,7 @@
             </div>
           </div>
         </div>
-        <FundForm v-if="inProgress"></FundForm>
+        <FundForm @fund="handleFund" v-if="inProgress"></FundForm>
 
       </div>
     </div>
@@ -72,7 +72,7 @@ import {useStore} from "vuex";
 import {RootState} from "@/store";
 import {Web3Provider} from "@ethersproject/providers";
 import Funding from "@/api/funding";
-import {formatEther, getAddress} from "ethers/lib/utils";
+import {formatEther, getAddress, parseEther} from "ethers/lib/utils";
 import account from "@/store/modules/account";
 
 export default defineComponent ({
@@ -181,13 +181,31 @@ export default defineComponent ({
 
     async function handleWithdraw() {
       const response = await Funding.withdraw(
+
           new Web3Provider((<any>window).ethereum),
           BigNumber.from(props.campaign.id)
       )
-      console.log(response)
+      await response.wait()
+      store.dispatch('campaigns/fetchCampaigns')
+      store.dispatch('campaigns/fetchFundingTransactionsByCampaignId', props.campaign.id)
+      store.dispatch('account/fetchAccountState', props.campaign.id)
     }
 
-
+    async function handleFund(amount: any) {
+      if (amount <= 0) {
+        console.log('invalid amount')
+        return
+      }
+      const weiAmount = parseEther(amount)
+      const response = await Funding.fundCampaign(
+          new Web3Provider((<any>window).ethereum),
+          BigNumber.from(props.campaign.id),
+          weiAmount)
+      await response.wait()
+      store.dispatch('campaigns/fetchCampaigns')
+      store.dispatch('campaigns/fetchFundingTransactionsByCampaignId', props.campaign.id)
+      store.dispatch('account/fetchAccountState', props.campaign.id)
+    }
 
     return {
       targetEthers,
@@ -209,7 +227,8 @@ export default defineComponent ({
       numberOfParticipants,
       transactionSum,
 
-      handleWithdraw
+      handleWithdraw,
+      handleFund
     }
   }
 })
