@@ -43,10 +43,6 @@ export default defineComponent( {
     const owner = ref("0x0")
     const target = ref("10")
     async function handleCreateCampaign() {
-      console.log(owner.value,
-          ethers.utils.parseEther(target.value),
-          BigNumber.from(moment(startDate.value).unix()),
-          BigNumber.from(moment(finishDate.value).unix()))
       const response = await Funding.createCampaign(
           new Web3Provider(window.ethereum),
             owner.value,
@@ -54,8 +50,6 @@ export default defineComponent( {
             BigNumber.from(moment(startDate.value).unix()),
             BigNumber.from(moment(finishDate.value).unix())
             )
-
-      console.log(response)
     }
 
     return {

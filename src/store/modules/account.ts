@@ -34,7 +34,12 @@ const getters = {
         return state.address;
     },
     fundingBalance: (state: AccountState) => (campaignId: number) => {
-        return state.fundingBalances.get(campaignId)}
+        const balance =  state.fundingBalances.get(campaignId)
+        if (balance != undefined) {
+            return balance
+        }
+        return BigNumber.from(-1)
+    }
 }
 
 const actions = {

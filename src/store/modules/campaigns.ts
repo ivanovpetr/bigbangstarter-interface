@@ -53,6 +53,18 @@ const getters = {
             }
         }
         return participantsSet.size
+    },
+    transactionSum: (state: CampaignsState) => (campaignId: number, funder: string) => {
+        let sum = BigNumber.from(0)
+        const campaignTransactions = state.fundingTransactions.get(campaignId)
+        if (campaignTransactions != undefined){
+            for(let t in campaignTransactions) {
+                if (ethers.utils.getAddress(funder) === ethers.utils.getAddress(campaignTransactions[t].funder)) {
+                    sum = sum.add(campaignTransactions[t].amount)
+                }
+            }
+        }
+        return sum
     }
 }
 

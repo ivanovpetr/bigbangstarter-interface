@@ -46,11 +46,12 @@
             <p class="text-end">{{fundedPercentage}}%</p>
           </div>
         </div>
-        <div class="row"><div class="col text-end"><span class="fs-6">Your fundings: {{ fundingBalance }}</span></div></div>
+        <div class="row"><div class="col text-end"><span class="fs-6">Your fundings were: {{ transactionSum }}</span></div></div>
+        <div v-if="finished" class="row"><div class="col text-end"><span class="fs-6">Available to withdraw: {{ toWithdraw }}</span></div></div>
         <div v-if="showWithdrawButton" class="row">
           <div class="col">
             <div class="d-grid gap-2">
-              <button type="button" class="btn btn-success">Withdraw {{toWithdraw}} ETH</button>
+              <button @click="handleWithdraw" type="button" class="btn btn-success">Withdraw {{toWithdraw}} ETH</button>
             </div>
           </div>
         </div>
@@ -65,11 +66,13 @@
 import {computed, defineComponent, onMounted, PropType, ref} from "vue";
 import FundForm from "./FundForm.vue";
 import {CampaignData} from "@/store/modules/campaigns";
-import {ethers} from "ethers";
+import {BigNumber, ethers} from "ethers";
 import moment from "moment";
-import store from "@/store";
 import {useStore} from "vuex";
 import {RootState} from "@/store";
+import {Web3Provider} from "@ethersproject/providers";
+import Funding from "@/api/funding";
+import {formatEther} from "ethers/lib/utils";
 
 export default defineComponent ({
   name: "CampaignSummary",
@@ -84,16 +87,12 @@ export default defineComponent ({
   },
   setup(props) {
     const store = useStore<RootState>()
-    const targetEthers = computed(() => {
-      return ethers.utils.formatEther(props.campaign.target)
-    })
-    const fundedEthers = computed(() => {
-      return ethers.utils.formatEther(props.campaign.funded)
-    })
-    const fundedPercentage = computed(() => {
-      return props.campaign.funded.div(props.campaign.target.div(100)).toNumber()
+    onMounted(() => {
+      store.dispatch('account/fetchFundingBalance', props.campaign.id)
+      store.dispatch('campaigns/fetchFundingTransactionsByCampaignId', props.campaign.id)
     })
 
+    //setup timer
     let days = ref(0), hours = ref(0), minutes = ref(0), seconds = ref(0)
     setInterval(() => {
       const now = moment().unix()
@@ -116,52 +115,74 @@ export default defineComponent ({
 
     }, 1000)
 
+    const targetEthers = computed(() => {
+      return ethers.utils.formatEther(props.campaign.target)
+    })
+    const fundedEthers = computed(() => {
+      return ethers.utils.formatEther(props.campaign.funded)
+    })
+    const fundedPercentage = computed(() => {
+      return props.campaign.funded.div(props.campaign.target.div(100)).toNumber()
+    })
     const inProgress = computed(() => {
       const now = moment().unix()
       return now > props.campaign.startedAt.unix() && now < props.campaign.finishedAt.unix()
     })
-
     const finished = computed(() => {
       const now = moment().unix()
       return now >= props.campaign.finishedAt.unix()
     })
-
     const succeed = computed(() => {
       return props.campaign.target.lte(props.campaign.funded)
     })
-
-    onMounted(() => {
-      store.dispatch('account/fetchFundingBalance', props.campaign.id)
-      store.dispatch('campaigns/fetchFundingTransactionsByCampaignId', props.campaign.id)
-    })
-
-    const fundingBalance = computed(() => {
-      const balance = store.getters["account/fundingBalance"](props.campaign.id)
-      if (balance) {
-        return ethers.utils.formatEther(balance)
-      }
-      return '0'
-    })
-
     const accountAddress = computed(() => {
       return store.getters['account/address']
     })
-
-    const toWithdraw = computed(() => {
-      if (props.campaign.owner === accountAddress.value) {
-        return props.campaign.funded
-      } else {
-        return fundingBalance.value
-      }
-    })
-
     const numberOfParticipants = computed(() => {
       return store.getters['campaigns/numberOfUniqueParticipants'](props.campaign.id)
     })
-
     const showWithdrawButton = computed(() => {
-      return (props.campaign.owner === accountAddress.value && succeed.value) || (!succeed.value && finished.value)
+      return ((props.campaign.owner === accountAddress.value && succeed.value) || (!succeed.value && finished.value)) && store.getters["account/fundingBalance"](props.campaign.id).gt(0)
     })
+    const transactionSum = computed(() => {
+      const sum = store.getters['campaigns/transactionSum'](props.campaign.id, store.getters['account/address'])
+      return ethers.utils.formatEther(sum)
+    })
+    const toWithdraw = computed(() => {
+      if (!finished.value){
+        return '0.0'
+      }
+
+      if (props.campaign.owner === accountAddress.value) {
+        if (succeed.value && !props.campaign.collectedByOwner) {
+          return formatEther(props.campaign.funded)
+        } else {
+          return '0.0'
+        }
+      } else {
+        const balance =  store.getters["account/fundingBalance"](props.campaign.id)
+        if (balance.gte(0)) {
+          if (!succeed.value) {
+            return formatEther(balance)
+          } else {
+            return '0.0'
+          }
+        } else {
+          return '-'
+        }
+      }
+
+    })
+
+    async function handleWithdraw() {
+      const response = await Funding.withdraw(
+          new Web3Provider((<any>window).ethereum),
+          BigNumber.from(props.campaign.id)
+      )
+      console.log(response)
+    }
+
+
 
     return {
       targetEthers,
@@ -177,11 +198,13 @@ export default defineComponent ({
       finished,
       succeed,
 
-      fundingBalance,
       accountAddress,
       showWithdrawButton,
       toWithdraw,
-      numberOfParticipants
+      numberOfParticipants,
+      transactionSum,
+
+      handleWithdraw
     }
   }
 })
