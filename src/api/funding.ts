@@ -5,6 +5,7 @@ import config from "@/config/config";
 import provider from "@/utils/provider";
 
 import FundingABI from "../abi/Funding.json"
+import campaigns from "@/store/modules/campaigns";
 
 
 export default class Funding {

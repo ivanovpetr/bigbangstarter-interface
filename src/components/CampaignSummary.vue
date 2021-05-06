@@ -65,14 +65,15 @@
 <script lang="ts">
 import {computed, defineComponent, onMounted, PropType, ref} from "vue";
 import FundForm from "./FundForm.vue";
-import {CampaignData} from "@/store/modules/campaigns";
+import campaigns, {CampaignData} from "@/store/modules/campaigns";
 import {BigNumber, ethers} from "ethers";
 import moment from "moment";
 import {useStore} from "vuex";
 import {RootState} from "@/store";
 import {Web3Provider} from "@ethersproject/providers";
 import Funding from "@/api/funding";
-import {formatEther} from "ethers/lib/utils";
+import {formatEther, getAddress} from "ethers/lib/utils";
+import account from "@/store/modules/account";
 
 export default defineComponent ({
   name: "CampaignSummary",
@@ -142,7 +143,7 @@ export default defineComponent ({
       return store.getters['campaigns/numberOfUniqueParticipants'](props.campaign.id)
     })
     const showWithdrawButton = computed(() => {
-      return ((props.campaign.owner === accountAddress.value && succeed.value) || (!succeed.value && finished.value)) && store.getters["account/fundingBalance"](props.campaign.id).gt(0)
+      return (isOwner(accountAddress.value) && succeed.value && finished.value && !props.campaign.collectedByOwner) || ((!succeed.value && finished.value) && store.getters["account/fundingBalance"](props.campaign.id).gt(0))
     })
     const transactionSum = computed(() => {
       const sum = store.getters['campaigns/transactionSum'](props.campaign.id, store.getters['account/address'])
@@ -153,7 +154,7 @@ export default defineComponent ({
         return '0.0'
       }
 
-      if (props.campaign.owner === accountAddress.value) {
+      if (isOwner(accountAddress.value)) {
         if (succeed.value && !props.campaign.collectedByOwner) {
           return formatEther(props.campaign.funded)
         } else {
@@ -173,6 +174,10 @@ export default defineComponent ({
       }
 
     })
+
+    function isOwner(address: string): boolean {
+      return getAddress(props.campaign.owner) === getAddress(address)
+    }
 
     async function handleWithdraw() {
       const response = await Funding.withdraw(
