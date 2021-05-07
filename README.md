@@ -1,4 +1,5 @@
-# vue
+# BigBangStarter Interface
+This project is created for learning purposes. There is no intention to run it on mainnet ever. It is a frontend for smart contract located [here](https://github.com/ivanovpetr/bigbangstarter-core), there you can find more detailed project description.
 
 ## Project setup
 ```
